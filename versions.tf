@@ -12,13 +12,7 @@ terraform {
     }
   }
 
-  # Remote state is configured by the calling agent at `terraform init` time
-  # via `-backend-config="..."` arguments. Example:
-  #
-  #   terraform init \
-  #     -backend-config="resource_group_name=tfstate-rg" \
-  #     -backend-config="storage_account_name=tfstateacct" \
-  #     -backend-config="container_name=tfstate" \
-  #     -backend-config="key=my-vm.tfstate"
+  # Remote state config is supplied by the runner at `terraform init` time via
+  # `-backend-config="..."` arguments (see runner/entrypoint.sh).
   backend "azurerm" {}
 }
