@@ -1,0 +1,16 @@
+# Local Terraform state and overrides
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Variable files (keep examples)
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Plan output
+tfplan
+*.tfplan

@@ -1,0 +1,59 @@
+# Example variable values for the Windows VM template.
+# Copy to terraform.tfvars (which is gitignored) and edit, or pass values
+# via TF_VAR_* environment variables.
+
+# --- Identity & placement ---------------------------------------------------
+name                  = "win-app-01"
+location              = "australiaeast"
+resource_group_name   = "rg-app-prod"
+create_resource_group = false
+
+tags = {
+  environment = "prod"
+  owner       = "platform-team"
+  workload    = "app"
+}
+
+# --- Networking (existing vnet/subnet) --------------------------------------
+vnet_resource_group_name = "rg-network-prod"
+vnet_name                = "vnet-prod-ae"
+subnet_name              = "snet-app"
+private_ip_allocation    = "Dynamic"
+# private_ip_address     = "10.10.1.20"  # only when allocation = "Static"
+
+create_public_ip = false
+# public_ip_sku               = "Standard"
+# public_ip_allocation_method = "Static"
+
+# --- Compute ----------------------------------------------------------------
+vm_size                          = "Standard_D2s_v5"
+admin_username                   = "azureadmin"
+enable_system_assigned_identity  = true
+enable_boot_diagnostics          = true
+
+os_disk = {
+  storage_account_type = "Premium_LRS"
+  caching              = "ReadWrite"
+  # disk_size_gb       = 128
+}
+
+data_disks = [
+  {
+    name_suffix          = "data01"
+    disk_size_gb         = 128
+    lun                  = 0
+    storage_account_type = "Premium_LRS"
+    caching              = "ReadWrite"
+  },
+]
+
+# --- Image (defaults to Windows Server 2025 Datacenter Azure Edition smalldisk) ---
+# image_publisher = "MicrosoftWindowsServer"
+# image_offer     = "WindowsServer"
+# image_sku       = "2025-datacenter-azure-edition-smalldisk"
+# image_version   = "latest"
+
+# --- Key Vault for admin password (existing KV) -----------------------------
+key_vault_name                = "kv-secrets-prod"
+key_vault_resource_group_name = "rg-secrets-prod"
+# admin_password_secret_name  = "win-app-01-admin-password"  # defaults to <name>-admin-password
