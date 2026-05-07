@@ -1,55 +1,74 @@
 # vm-template-repo
 
-Terraform template consumed by the [vm-build-agent](https://github.com/anwather/vm-build-agent)
-runner Container App Job. The agent's bridge function writes a
-`terraform.tfvars.json` with exactly the variables declared in `variables.tf`,
-then runs `terraform init` (azurerm backend) and `terraform apply`.
+Terraform templates consumed by the **Task Orchestrator** hosted agents (one
+agent per OS family). Each subfolder is a self-contained Terraform module
+with the same variable contract; the agent selects which subfolder to run
+inside via the `TEMPLATE_SUBFOLDER` environment variable.
 
-## Contract
+## Layout
 
-The runner emits these seven variables — they MUST stay in sync with
-`agent/tools/openapi.json` and `function_app/function_app.py` in the
-vm-build-agent repo:
+| Path        | Used by                              | OS family         |
+|-------------|--------------------------------------|-------------------|
+| `windows/`  | `vmagent-agent` hosted agent         | Windows Server    |
+| `linux/`    | `vmagent-agent-linux` hosted agent   | Ubuntu / RHEL     |
+
+Both modules share the same seven-variable contract and emit the same output
+shape so the agent's tool layer is OS-agnostic. The only differences are:
+
+- Allowed `os_image` enum (set per agent via `ALLOWED_OS_IMAGES_JSON`).
+- Resource type (`azurerm_windows_virtual_machine` vs
+  `azurerm_linux_virtual_machine`).
+- The Linux module sets `disable_password_authentication = false` so the
+  generated random password works for SSH.
+
+## Contract (both modules)
 
 | Variable          | Source                                                      |
 |-------------------|-------------------------------------------------------------|
-| `vm_name`         | User input. 2–15 chars (Windows NetBIOS).                   |
-| `resource_group`  | User input. Created by this template if it doesn't exist.   |
+| `vm_name`         | User input. Windows: 2-15 chars. Linux: 1-64, lowercase.    |
+| `resource_group`  | User input. Created by template if it doesn't exist.        |
 | `location`        | Azure region short name.                                    |
 | `vm_size`         | Azure VM SKU.                                               |
-| `os_image`        | One of the keys in `local.image_map` (see `locals.tf`).     |
+| `os_image`        | One of the keys in `local.image_map`.                       |
 | `admin_username`  | Local admin username.                                       |
 | `subnet_id`       | Full ARM ID of a pre-existing subnet.                       |
 
 ## Supported `os_image` values
 
-Defined in `locals.tf` as `local.image_map`. To add a new option:
+### Windows (`windows/locals.tf`)
 
-1. Add a row to `local.image_map` with publisher/offer/sku/version.
+| `os_image`                       | Marketplace SKU                |
+|----------------------------------|--------------------------------|
+| `WindowsServer2022-smalldisk`    | `2022-datacenter-smalldisk`    |
+| `WindowsServer2025-smalldisk`    | `2025-datacenter-smalldisk`    |
+
+### Linux (`linux/locals.tf`)
+
+| `os_image`    | Publisher / Offer / SKU                                            |
+|---------------|--------------------------------------------------------------------|
+| `Ubuntu2204`  | `Canonical` / `0001-com-ubuntu-server-jammy` / `22_04-lts-gen2`    |
+| `Ubuntu2404`  | `Canonical` / `ubuntu-24_04-lts` / `server`                        |
+| `RHEL9`       | `RedHat` / `RHEL` / `9-lvm-gen2`                                   |
+
+To add a new option:
+
+1. Add a row to `local.image_map` in the relevant subfolder's `locals.tf`.
 2. Add the same string to the `os_image` validation list in `variables.tf`.
-3. Update `agent/tools/openapi.json` and `agent/instructions.md` in the
-   vm-build-agent repo.
+3. Update the agent's `ALLOWED_OS_IMAGES_JSON` env var in
+   `deploy/deploy_agent.py` (`AGENT_PROFILES`).
 
-Currently supported:
+## Outputs (both modules)
 
-| `os_image`                       | Marketplace SKU                       |
-|----------------------------------|---------------------------------------|
-| `WindowsServer2022-smalldisk`    | `2022-datacenter-smalldisk`           |
-| `WindowsServer2025-smalldisk`    | `2025-datacenter-smalldisk`           |
+`vm_id`, `vm_name`, `resource_group`, `location`, `os_image`, `image_sku`,
+`private_ip_address`, `admin_username`.
 
-## Outputs
-
-The runner uploads `terraform output -json` to the outputs blob — the agent
-fetches it via `get_deployment_output`. Notable outputs:
-
-- `private_ip_address`
-- `admin_username`
-- `admin_password` (sensitive)
-- `vm_id`, `resource_group`, `location`, `image_sku`
+The admin password is intentionally NOT emitted as a Terraform output. The
+runner stores it (or a secret URI) in Key Vault separately.
 
 ## Local testing
 
 ```bash
+cd windows   # or: cd linux
 cp terraform.tfvars.example terraform.tfvars.json
 # edit values
 terraform init -backend=false
