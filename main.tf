@@ -22,7 +22,7 @@ resource "azurerm_resource_group" "this" {
 # zone without extra prerequisites.
 ###############################################################################
 
-ephemeral "random_password" "password" {
+ephemeral "random_password" "admin" {
   length           = 16
   special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
