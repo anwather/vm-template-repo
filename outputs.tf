@@ -37,9 +37,3 @@ output "admin_username" {
   description = "Local admin username configured on the VM."
   value       = azurerm_windows_virtual_machine.this.admin_username
 }
-
-output "admin_password" {
-  description = "Generated local admin password. Sensitive — only fetch via the agent's get_deployment_output flow."
-  value       = random_password.admin.result
-  sensitive   = true
-}
