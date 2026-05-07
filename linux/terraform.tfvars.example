@@ -1,0 +1,9 @@
+{
+  "vm_name":        "linux-test-01",
+  "resource_group": "ai_demo",
+  "location":       "australiaeast",
+  "vm_size":        "Standard_D2s_v5",
+  "os_image":       "Ubuntu2404",
+  "admin_username": "azureuser",
+  "subnet_id":      "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/network-rg/providers/Microsoft.Network/virtualNetworks/lz-vnet/subnets/workloads"
+}
