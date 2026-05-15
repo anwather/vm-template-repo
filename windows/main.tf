@@ -1,10 +1,15 @@
 ###############################################################################
-# Resource group — created if missing, otherwise reused.
-# We always manage the RG via this template so the agent can deploy into a new
-# RG on first run without an out-of-band step.
+# Resource group — reuse an existing RG when the name is already present in the
+# subscription, otherwise create it here.
 ###############################################################################
 
+data "azurerm_resources" "resource_group" {
+  name = var.resource_group
+  type = "Microsoft.Resources/resourceGroups"
+}
+
 resource "azurerm_resource_group" "this" {
+  count    = local.resource_group_exists ? 0 : 1
   name     = var.resource_group
   location = var.location
   tags     = local.common_tags
@@ -41,7 +46,7 @@ resource "random_password" "admin" {
 
 resource "azurerm_network_interface" "this" {
   name                = local.nic_name
-  resource_group_name = azurerm_resource_group.this.name
+  resource_group_name = local.resource_group_name
   location            = var.location
   tags                = local.common_tags
 
@@ -59,7 +64,7 @@ resource "azurerm_network_interface" "this" {
 resource "azurerm_windows_virtual_machine" "this" {
   name                = var.vm_name
   computer_name       = var.vm_name
-  resource_group_name = azurerm_resource_group.this.name
+  resource_group_name = local.resource_group_name
   location            = var.location
   size                = var.vm_size
   admin_username      = var.admin_username

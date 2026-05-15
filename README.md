@@ -26,7 +26,7 @@ shape so the agent's tool layer is OS-agnostic. The only differences are:
 | Variable          | Source                                                      |
 |-------------------|-------------------------------------------------------------|
 | `vm_name`         | User input. Windows: 2-15 chars. Linux: 1-64, lowercase.    |
-| `resource_group`  | User input. Created by template if it doesn't exist.        |
+| `resource_group`  | User input. Reused if it exists; created if it doesn't.     |
 | `location`        | Azure region short name.                                    |
 | `vm_size`         | Azure VM SKU.                                               |
 | `os_image`        | One of the keys in `local.image_map`.                       |

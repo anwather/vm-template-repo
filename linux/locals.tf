@@ -28,6 +28,17 @@ locals {
 
   image = local.image_map[var.os_image]
 
+  existing_resource_group = try(data.azurerm_resources.resource_group.resources[0], null)
+  resource_group_exists   = local.existing_resource_group != null
+  resource_group_name = coalesce(
+    try(local.existing_resource_group.name, null),
+    try(azurerm_resource_group.this[0].name, null),
+  )
+  resource_group_location = coalesce(
+    try(local.existing_resource_group.location, null),
+    try(azurerm_resource_group.this[0].location, null),
+  )
+
   nic_name      = "${var.vm_name}-nic"
   os_disk_name  = "${var.vm_name}-osdisk"
   ipconfig_name = "ipconfig1"

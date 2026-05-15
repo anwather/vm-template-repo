@@ -10,12 +10,12 @@ output "vm_name" {
 
 output "resource_group" {
   description = "Resource group containing the VM."
-  value       = azurerm_resource_group.this.name
+  value       = local.resource_group_name
 }
 
 output "location" {
   description = "Azure region the VM was deployed to."
-  value       = azurerm_resource_group.this.location
+  value       = local.resource_group_location
 }
 
 output "os_image" {
