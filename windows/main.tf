@@ -3,9 +3,11 @@
 # subscription, otherwise create it here.
 ###############################################################################
 
-data "azurerm_resources" "resource_group" {
-  name = var.resource_group
-  type = "Microsoft.Resources/resourceGroups"
+data "azurerm_client_config" "current" {}
+
+data "azapi_resource_list" "resource_groups" {
+  type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+  parent_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -15,8 +17,6 @@ resource "azurerm_resource_group" "this" {
   tags     = local.common_tags
 
   lifecycle {
-    # The agent deploys multiple VMs into the same RG over time; don't fight
-    # over tags that other deployments may have added.
     ignore_changes = [tags]
   }
 }

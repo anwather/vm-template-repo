@@ -22,7 +22,11 @@ locals {
 
   image = local.image_map[var.os_image]
 
-  existing_resource_group = try(data.azurerm_resources.resource_group.resources[0], null)
+  existing_resource_groups = [
+    for resource_group in try(data.azapi_resource_list.resource_groups.output.value, []) : resource_group
+    if resource_group.name == var.resource_group
+  ]
+  existing_resource_group = try(local.existing_resource_groups[0], null)
   resource_group_exists   = local.existing_resource_group != null
   resource_group_name = coalesce(
     try(local.existing_resource_group.name, null),
